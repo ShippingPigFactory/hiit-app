@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #F5F5F0;
+  --surface: #FFFFFF;
+  --surface-2: #EFEFEA;
+  --border: #E0E0DA;
+  --text-1: #0A0A0A;
+  --text-2: #666666;
+  --accent: #FF4500;
+  --accent-dim: rgba(255, 69, 0, 0.12);
+  --accent-glow: rgba(255, 69, 0, 0.25);
+  --rest-color: #00BCD4;
+  --rest-dim: rgba(0, 188, 212, 0.12);
+  --success: #00C853;
+  --nav-h: 68px;
+}
+
+.dark {
+  --bg: #0A0A0A;
+  --surface: #141414;
+  --surface-2: #1C1C1C;
+  --border: #242424;
+  --text-1: #F5F5F5;
+  --text-2: #777777;
+  --accent: #FF4500;
+  --accent-dim: rgba(255, 69, 0, 0.15);
+  --accent-glow: rgba(255, 69, 0, 0.35);
+  --rest-color: #00BCD4;
+  --rest-dim: rgba(0, 188, 212, 0.15);
+  --success: #00E676;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body, #root {
+  height: 100%;
+  overscroll-behavior: none;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text-1);
+  font-family: 'Barlow', sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  transition: background 0.3s ease, color 0.3s ease;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  max-width: 480px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.page {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: var(--nav-h);
+  min-height: 100dvh;
+}
+
+.surface {
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.surface-2 {
+  background: var(--surface-2);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* Timer progress ring */
+.progress-ring {
+  transform: rotate(-90deg);
+  transform-origin: center;
+}
+
+.progress-ring circle {
+  transition: stroke-dashoffset 0.8s linear, stroke 0.3s ease;
+}
+
+/* Phase pulse */
+@keyframes phase-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.phase-work { animation: phase-pulse 1s ease-in-out infinite; }
+
+/* Glow effect */
+.glow-accent {
+  box-shadow: 0 0 30px var(--accent-glow), 0 0 60px rgba(255, 69, 0, 0.1);
+}
+
+.glow-rest {
+  box-shadow: 0 0 30px rgba(0, 188, 212, 0.3), 0 0 60px rgba(0, 188, 212, 0.1);
+}
+
+/* Transition for all theme-aware properties */
+.surface, .surface-2 {
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
