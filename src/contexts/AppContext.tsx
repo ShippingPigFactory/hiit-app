@@ -64,6 +64,7 @@ interface AppContextType {
   addTemplate: (t: WorkoutTemplate) => void;
   updateTemplate: (id: string, partial: Partial<WorkoutTemplate>) => void;
   deleteTemplate: (id: string) => void;
+  moveTemplate: (id: string, direction: 'up' | 'down') => void;
   history: WorkoutSession[];
   addSession: (s: WorkoutSession) => void;
   deleteSession: (id: string) => void;
@@ -134,6 +135,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setTemplates((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
+  const moveTemplate = useCallback((id: string, direction: 'up' | 'down') => {
+    setTemplates((prev) => {
+      const idx = prev.findIndex((t) => t.id === id);
+      if (idx < 0) return prev;
+      const next = [...prev];
+      const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+      if (swapIdx < 0 || swapIdx >= next.length) return prev;
+      [next[idx], next[swapIdx]] = [next[swapIdx], next[idx]];
+      return next;
+    });
+  }, []);
+
   const addSession = useCallback((s: WorkoutSession) => {
     setHistory((prev) => [s, ...prev]);
   }, []);
@@ -151,6 +164,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         addTemplate,
         updateTemplate,
         deleteTemplate,
+        moveTemplate,
         history,
         addSession,
         deleteSession,

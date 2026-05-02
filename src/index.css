@@ -59,13 +59,15 @@ body {
   max-width: 480px;
   margin: 0 auto;
   position: relative;
+  height: 100dvh;
+  overflow: hidden;
 }
 
 .page {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding-bottom: var(--nav-h);
-  min-height: 100dvh;
 }
 
 .surface {

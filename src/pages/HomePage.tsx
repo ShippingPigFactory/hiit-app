@@ -14,15 +14,25 @@ function estimateDuration(t: WorkoutTemplate): number {
   return t.rounds * (t.workSeconds + t.restSeconds) + (t.rounds - 1) * t.restBetweenRoundsSeconds;
 }
 
-function WorkoutCard({ template, onStart, onEdit, onDelete }: {
+function WorkoutCard({ template, onStart, onEdit, onDelete, onMoveUp, onMoveDown, isFirst, isLast }: {
   template: WorkoutTemplate;
   onStart: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  isFirst: boolean;
+  isLast: boolean;
 }) {
   const [showMenu, setShowMenu] = useState(false);
   const dur = estimateDuration(template);
-  const isDefault = ['tabata', 'hiit-basic', 'endurance'].includes(template.id);
+
+  const menuBtnStyle: React.CSSProperties = {
+    display: 'block', width: '100%', padding: '8px 12px',
+    background: 'none', border: 'none', cursor: 'pointer',
+    color: 'var(--text-1)', textAlign: 'left', fontSize: 14,
+    fontFamily: 'Barlow, sans-serif',
+  };
 
   return (
     <div
@@ -44,20 +54,20 @@ function WorkoutCard({ template, onStart, onEdit, onDelete }: {
             </span>
           </div>
         </div>
-        {!isDefault && (
-          <div style={{ position: 'relative' }}>
-            <button
-              onClick={() => setShowMenu((v) => !v)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-2)', padding: '4px 8px', fontSize: 18 }}
-            >⋯</button>
-            {showMenu && (
-              <div style={{ position: 'absolute', right: 0, top: '100%', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '4px', zIndex: 50, minWidth: 120 }}>
-                <button onClick={() => { setShowMenu(false); onEdit(); }} style={{ display: 'block', width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-1)', textAlign: 'left', fontSize: 14, fontFamily: 'Barlow, sans-serif' }}>Edit</button>
-                <button onClick={() => { setShowMenu(false); onDelete(); }} style={{ display: 'block', width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', color: '#FF4444', textAlign: 'left', fontSize: 14, fontFamily: 'Barlow, sans-serif' }}>Delete</button>
-              </div>
-            )}
-          </div>
-        )}
+        <div style={{ position: 'relative' }}>
+          <button
+            onClick={() => setShowMenu((v) => !v)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-2)', padding: '4px 8px', fontSize: 18 }}
+          >⋯</button>
+          {showMenu && (
+            <div style={{ position: 'absolute', right: 0, top: '100%', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '4px', zIndex: 50, minWidth: 140 }}>
+              <button onClick={() => { setShowMenu(false); onEdit(); }} style={menuBtnStyle}>Edit</button>
+              {!isFirst && <button onClick={() => { setShowMenu(false); onMoveUp(); }} style={menuBtnStyle}>↑ Move up</button>}
+              {!isLast && <button onClick={() => { setShowMenu(false); onMoveDown(); }} style={menuBtnStyle}>↓ Move down</button>}
+              <button onClick={() => { setShowMenu(false); onDelete(); }} style={{ ...menuBtnStyle, color: '#FF4444' }}>Delete</button>
+            </div>
+          )}
+        </div>
       </div>
 
       {template.exercises.length > 0 && (
@@ -98,7 +108,7 @@ function WorkoutCard({ template, onStart, onEdit, onDelete }: {
 }
 
 export default function HomePage() {
-  const { templates, addTemplate, updateTemplate, deleteTemplate, history, settings } = useApp();
+  const { templates, addTemplate, updateTemplate, deleteTemplate, moveTemplate, history, settings } = useApp();
   const navigate = useNavigate();
   const [showBuilder, setShowBuilder] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<WorkoutTemplate | null>(null);
@@ -151,13 +161,17 @@ export default function HomePage() {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 16 }}>
-        {templates.map((t) => (
+        {templates.map((t, i) => (
           <WorkoutCard
             key={t.id}
             template={t}
             onStart={() => navigate(`/timer/${t.id}`)}
             onEdit={() => { setEditingTemplate(t); setShowBuilder(true); }}
             onDelete={() => deleteTemplate(t.id)}
+            onMoveUp={() => moveTemplate(t.id, 'up')}
+            onMoveDown={() => moveTemplate(t.id, 'down')}
+            isFirst={i === 0}
+            isLast={i === templates.length - 1}
           />
         ))}
       </div>
