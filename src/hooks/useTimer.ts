@@ -1,6 +1,40 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { TimerPhase, WorkoutTemplate } from '../types';
 
+function useWakeLock(active: boolean) {
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+
+  useEffect(() => {
+    if (!('wakeLock' in navigator)) return;
+
+    if (active) {
+      navigator.wakeLock.request('screen').then((lock) => {
+        wakeLockRef.current = lock;
+        lock.addEventListener('release', () => { wakeLockRef.current = null; });
+      }).catch(() => {});
+    } else {
+      wakeLockRef.current?.release().catch(() => {});
+    }
+
+    return () => { wakeLockRef.current?.release().catch(() => {}); };
+  }, [active]);
+
+  // Re-acquire after tab becomes visible again (e.g. user switches back)
+  useEffect(() => {
+    if (!active || !('wakeLock' in navigator)) return;
+    const onVisible = () => {
+      if (document.visibilityState === 'visible' && !wakeLockRef.current) {
+        navigator.wakeLock.request('screen').then((lock) => {
+          wakeLockRef.current = lock;
+          lock.addEventListener('release', () => { wakeLockRef.current = null; });
+        }).catch(() => {});
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [active]);
+}
+
 interface TimerState {
   phase: TimerPhase;
   timeLeft: number;
@@ -59,6 +93,8 @@ export function useTimer({ template, weightKg, soundEnabled, onComplete }: Timer
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const stateRef = useRef(state);
   const configRef = useRef({ template, weightKg, soundEnabled });
+
+  useWakeLock(state.isRunning);
 
   stateRef.current = state;
   configRef.current = { template, weightKg, soundEnabled };
