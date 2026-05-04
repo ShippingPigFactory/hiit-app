@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { useRegisterSW } from 'virtual:pwa-register/react';
 import { useApp } from '../contexts/AppContext';
 
 function Row({ label, sublabel, children }: { label: string; sublabel?: string; children: React.ReactNode }) {
@@ -45,6 +47,25 @@ function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) =>
 
 export default function SettingsPage() {
   const { settings, updateSettings, history, deleteSession } = useApp();
+  const [checkStatus, setCheckStatus] = useState<'idle' | 'checking' | 'latest'>('idle');
+  const {
+    needRefresh: [needRefresh],
+    updateServiceWorker,
+  } = useRegisterSW();
+
+  async function checkForUpdate() {
+    if (needRefresh) return;
+    setCheckStatus('checking');
+    try {
+      const reg = await navigator.serviceWorker.getRegistration();
+      await reg?.update();
+      setTimeout(() => {
+        if (!needRefresh) setCheckStatus('latest');
+      }, 1500);
+    } catch {
+      setCheckStatus('latest');
+    }
+  }
 
   function clearHistory() {
     if (confirm('全てのトレーニング履歴を削除しますか？\nThis will delete all workout history.')) {
@@ -153,6 +174,46 @@ export default function SettingsPage() {
               CLEAR ALL HISTORY
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* App Update */}
+      <div style={{ marginBottom: 28 }}>
+        <div style={{ fontSize: 11, fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--text-2)', marginBottom: 4 }}>APP UPDATE</div>
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '16px' }}>
+          {needRefresh ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ fontSize: 13, color: 'var(--accent)', fontFamily: 'Barlow, sans-serif', fontWeight: 600 }}>
+                新しいバージョンが利用可能です
+              </div>
+              <button
+                onClick={() => updateServiceWorker(true)}
+                style={{ background: 'var(--accent)', border: 'none', borderRadius: 10, padding: '12px 20px', color: '#fff', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, fontSize: 15, letterSpacing: '0.05em', cursor: 'pointer', width: '100%' }}
+              >
+                今すぐ更新 / UPDATE NOW
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {checkStatus === 'latest' && (
+                <div style={{ fontSize: 13, color: 'var(--text-2)', fontFamily: 'Barlow, sans-serif' }}>
+                  最新バージョンです
+                </div>
+              )}
+              {checkStatus === 'checking' && (
+                <div style={{ fontSize: 13, color: 'var(--text-2)', fontFamily: 'Barlow, sans-serif' }}>
+                  確認中...
+                </div>
+              )}
+              <button
+                onClick={checkForUpdate}
+                disabled={checkStatus === 'checking'}
+                style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 20px', color: 'var(--text-1)', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, fontSize: 14, letterSpacing: '0.05em', cursor: checkStatus === 'checking' ? 'default' : 'pointer', width: '100%', opacity: checkStatus === 'checking' ? 0.5 : 1 }}
+              >
+                {checkStatus === 'checking' ? '確認中...' : '更新を確認 / CHECK FOR UPDATES'}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
